@@ -1,0 +1,22 @@
+{
+  "name": "json-db-api",
+  "version": "1.0.0",
+  "description": "Simple JSON API server like jsonbase/myjson",
+  "keywords": ["json", "api", "database", "jsonbase", "myjson"],
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Ivan Alexandrov",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^3.14.0",
+    "fastify-cors": "^5.2.0",
+    "fastify-rate-limit": "^5.5.0",
+    "knex": "^0.95.2",
+    "sqlite3": "^5.0.2"
+  },
+  "bin": {
+   "json-db-api": "bin/json-db-api"
+ }
+}
