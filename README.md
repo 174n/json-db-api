@@ -10,4 +10,8 @@ npm i -g json-db-api
 
 ## Run
 
-No configuration for now, just run ```json-db-api```
+```bash
+json-db-api
+# specify port
+json-db-api --port 8080
+```
