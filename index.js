@@ -1,6 +1,7 @@
 const fastify = require('fastify')({ logger: true });
 const knex = require('knex')
 const db = knex(require('./knexfile').development);
+const argparse = require('cli-argparse');
 
 fastify.register(require('fastify-rate-limit'), {
   max: 100,
@@ -52,12 +53,15 @@ fastify.get('*', async (request, reply) => {
   return { welcome: 'welcome to my json db api' };
 });
 
-const start = async () => {
-  try {
-    await fastify.listen(3000);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
+module.exports = argv => {
+  const args = argparse(argv);
+  const start = async () => {
+    try {
+      await fastify.listen(args.options.port || 3000);
+    } catch (err) {
+      fastify.log.error(err);
+      process.exit(1);
+    }
   }
+  start();
 }
-start();
