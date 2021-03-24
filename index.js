@@ -1,5 +1,6 @@
 const path = require('path');
 const minimist = require('minimist');
+const knex = require('knex');
 
 module.exports = {
   run: async argv => {
@@ -23,7 +24,7 @@ module.exports = {
 
     if (args.migrate) {
       try {
-        const migrationResult = await db.migrate.up();
+        const migrationResult = await knex(knexfile).migrate.up();
         console.log(migrationResult);
       } catch (err) {
         console.log(err);
@@ -35,7 +36,7 @@ module.exports = {
 
     if (args.rollback) {
       try {
-        const migrationResult = await db.migrate.down();
+        const migrationResult = await knex(knexfile).migrate.down();
         console.log(migrationResult);
       } catch (err) {
         console.log(err);

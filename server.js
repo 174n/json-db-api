@@ -5,7 +5,7 @@ module.exports = ({port, logger, knexfile}) => {
   const fastify = Fastify({
     logger
   });
-  const db = knex(knexfile);;
+  const db = knex(knexfile);
 
   fastify.register(require('fastify-rate-limit'), {
     max: 100,
