@@ -2,7 +2,7 @@
 
 [![last commit](https://img.shields.io/github/last-commit/Rundik/json-db-api.svg)](https://github.com/Rundik/json-db-api/commits/master)
 [![version](https://img.shields.io/npm/v/json-db-api.svg)](https://www.npmjs.com/package/json-db-api)
-![downloads](https://img.shields.io/npm/dm/json-db-api.svg)
+[![downloads](https://img.shields.io/npm/dm/json-db-api.svg)](https://www.npmjs.com/package/json-db-api)
 [![license](https://img.shields.io/npm/l/json-db-api.svg)](https://github.com/Rundik/json-db-api/blob/master/license)
 
 Simple JSON API server inspired by jsonbase/myjson
@@ -32,7 +32,7 @@ json-db-api --notpretty
 
 ## ToDo
 
-[x] Specify database path
-[ ] Long polling
-[ ] JSON patch
-[ ] Code splitting with fastify plugins
+- [x] Specify database path
+- [ ] Long polling
+- [ ] JSON patch
+- [ ] Code splitting with fastify plugins
