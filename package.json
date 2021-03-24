@@ -1,6 +1,6 @@
 {
   "name": "json-db-api",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Simple JSON API server like jsonbase/myjson",
   "keywords": [
     "json",
@@ -13,6 +13,8 @@
   "author": "Ivan Alexandrov",
   "license": "MIT",
   "dependencies": {
+    "eventemitter2": "^6.4.4",
+    "fast-json-patch": "^3.0.0-1",
     "fastify": "^3.14.0",
     "fastify-cors": "^5.2.0",
     "fastify-rate-limit": "^5.5.0",

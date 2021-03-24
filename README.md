@@ -4,6 +4,7 @@
 [![version](https://img.shields.io/npm/v/json-db-api.svg)](https://www.npmjs.com/package/json-db-api)
 [![downloads](https://img.shields.io/npm/dm/json-db-api.svg)](https://www.npmjs.com/package/json-db-api)
 [![license](https://img.shields.io/npm/l/json-db-api.svg)](https://github.com/Rundik/json-db-api/blob/master/license)
+![HitCount](http://hits.dwyl.com/Rundik/json-db-api.svg)
 
 Simple JSON API server inspired by jsonbase/myjson
 
@@ -36,6 +37,7 @@ json-db-api.cmd --version
 ## ToDo
 
 - [x] Specify database path
-- [ ] Long polling
-- [ ] JSON patch
+- [x] Long polling
+- [x] JSON patch
 - [ ] Code splitting with fastify plugins
+- [ ] Tests
