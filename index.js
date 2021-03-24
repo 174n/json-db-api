@@ -1,67 +1,59 @@
-const fastify = require('fastify')({ logger: true });
-const knex = require('knex')
-const db = knex(require('./knexfile').development);
-const argparse = require('cli-argparse');
+const path = require('path');
+const minimist = require('minimist');
 
-fastify.register(require('fastify-rate-limit'), {
-  max: 100,
-  timeWindow: '1 minute'
-});
+module.exports = {
+  run: async argv => {
+    const args = minimist(argv);
 
-fastify.register(require('fastify-cors'), { origin: true })
+    if (!args.database) {
+      args.database = "./db.sqlite3"
+    }
 
-const validIdRegex = /^[A-Za-z0-9\-_]+$/g;
-
-fastify.get('/:jsondir/:jsonid', async (request, reply) => {
-  const { jsondir, jsonid } = request.params;
-  if (!jsondir.match(validIdRegex) || !jsonid.match(validIdRegex) || (jsondir+jsonid).length >= 255) {
-    return reply.code(400).send({ error: 'not valid id' });
-  }
-  const data = await db("jsons").select("json").where("jsonpath", jsondir + "/" + jsonid);
-  return data && data.length > 0 ? data[0].json : reply.code(404).send({ error: 'json not found' });
-});
-
-fastify.put('/:jsondir/:jsonid', async (request, reply) => {
-  const { jsondir, jsonid } = request.params;
-  if (!jsondir.match(validIdRegex) || !jsonid.match(validIdRegex) || (jsondir+jsonid).length >= 255) {
-    return reply.code(400).send({ error: 'not valid id' });
-  }
-  if (!request.body || request.body.length > 1024 * 40) {
-    return reply.code(400).send({ error: 'json too big' });
-  }
-  let json;
-  try {
-    json = typeof request.body === "string" ? JSON.stringify(JSON.parse(request.body)) : JSON.stringify(request.body);
-  } catch (err) {
-    console.log(error);
-    return reply.code(400).send({ error: 'json not valid' });
-  } 
-  return db('jsons')
-    .where("jsonpath", jsondir + "/" + jsonid)
-    .insert({
-      jsonpath: jsondir + "/" + jsonid,
-      ip: request.connection.remoteAddress,
-      json,
-      created_at: parseInt(new Date().getTime() / 1000),
-      updated_at: parseInt(new Date().getTime() / 1000),
-    })
-    .onConflict('jsonpath')
-    .merge(['json', 'ip', 'updated_at']);
-});
-
-fastify.get('*', async (request, reply) => {
-  return { welcome: 'welcome to my json db api' };
-});
-
-module.exports = argv => {
-  const args = argparse(argv);
-  const start = async () => {
+    let knexfile;
     try {
-      await fastify.listen(args.options.port || 3000);
+      knexfile =  require('./knexfile');
+      knexfile.connection.filename = args.database;
+      if (!knexfile.migrations)
+        knexfile.migrations = {};
+      knexfile.migrations.directory = path.join(__dirname, "migrations");
     } catch (err) {
-      fastify.log.error(err);
+      console.log(err);
       process.exit(1);
     }
+
+    if (args.migrate) {
+      try {
+        const migrationResult = await db.migrate.up();
+        console.log(migrationResult);
+      } catch (err) {
+        console.log(err);
+        process.exit(1);
+      }
+      console.log("Migrated successful");
+      process.exit(1);
+    }
+
+    if (args.rollback) {
+      try {
+        const migrationResult = await db.migrate.down();
+        console.log(migrationResult);
+      } catch (err) {
+        console.log(err);
+        process.exit(1);
+      }
+      console.log("Rolled back successful");
+      process.exit(1);
+    }
+
+    require('./server')({
+      port: args.port || 3000,
+      logger: {
+        prettyPrint: args.notpretty ? false : {
+          translateTime: 'SYS:HH:MM:ss'
+        }
+      },
+      knexfile
+    });
+
   }
-  start();
 }
