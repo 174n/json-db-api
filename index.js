@@ -1,14 +1,20 @@
 const path = require('path');
 const minimist = require('minimist');
 const knex = require('knex');
-const updateNotifier = require('update-notifier');
+const updateNotice = require('update-notice');
 const pkg = require("./package.json");
 
 module.exports = {
   run: async argv => {
     const args = minimist(argv);
-
-    updateNotifier({pkg}).notify();
+    
+    const notice = updateNotice({
+      pkg,
+      options: {
+        isGlobal: true
+      }
+    });
+    notice.notify();
 
     if (args.version) {
       console.log(`${pkg.name} (${pkg.version}) - ${pkg.description}`);
