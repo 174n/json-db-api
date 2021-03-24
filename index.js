@@ -1,10 +1,19 @@
 const path = require('path');
 const minimist = require('minimist');
 const knex = require('knex');
+const updateNotifier = require('update-notifier');
+const pkg = require("./package.json");
 
 module.exports = {
   run: async argv => {
     const args = minimist(argv);
+
+    updateNotifier({pkg}).notify();
+
+    if (args.version) {
+      console.log(`${pkg.name} (${pkg.version}) - ${pkg.description}`);
+      process.exit(1);
+    }
 
     if (!args.database) {
       args.database = "./db.sqlite3"

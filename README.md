@@ -28,6 +28,9 @@ json-db-api --port 8080
 
 # log as json instead of pino-pretty
 json-db-api --notpretty
+
+# check version
+json-db-api.cmd --version
 ```
 
 ## ToDo
