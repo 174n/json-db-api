@@ -34,6 +34,19 @@ json-db-api --notpretty
 json-db-api.cmd --version
 ```
 
+## Development
+
+```bash
+# Install dependencies
+npm i
+
+# link package
+npm link
+
+# run
+json-db-api
+```
+
 ## ToDo
 
 - [x] Specify database path
@@ -41,3 +54,5 @@ json-db-api.cmd --version
 - [x] JSON patch
 - [ ] Code splitting with fastify plugins
 - [ ] Tests
+- [ ] Nodemon
+- [ ] Eslint

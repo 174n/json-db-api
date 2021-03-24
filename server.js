@@ -1,5 +1,5 @@
 const Fastify = require('fastify');
-const Database = require('./Database');
+const Database = require('./database.js');
 const jsonpatch = require('fast-json-patch');
 const EventEmitter2 = require('eventemitter2');
 const emitter = new EventEmitter2();
