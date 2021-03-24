@@ -1,6 +1,6 @@
 {
   "name": "json-db-api",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Simple JSON API server like jsonbase/myjson",
   "keywords": [
     "json",
@@ -24,5 +24,13 @@
   },
   "bin": {
     "json-db-api": "bin/json-db-api"
+  },
+  "homepage": "https://github.com/Rundik/json-db-api#readme",
+  "bugs": {
+    "url" : "https://github.com/Rundik/json-db-api/issues"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/Rundik/json-db-api.git"
   }
 }
