@@ -4,7 +4,7 @@ const jsonpatch = require('fast-json-patch');
 const EventEmitter2 = require('eventemitter2');
 const emitter = new EventEmitter2();
 
-module.exports = ({port, logger, knexfile}) => {
+module.exports = ({port, logger, knexfile, longpollTimeout}) => {
   const fastify = Fastify({
     logger
   });
@@ -38,75 +38,93 @@ module.exports = ({port, logger, knexfile}) => {
   })
 
   fastify.get('/:jsondir/:jsonid', async (request, reply) => {
-    const { jsondir, jsonid } = request;
-    const data = await db.getRecord(jsondir + "/" + jsonid);
-    return data && data.length > 0 ? data[0].json : reply.code(404).send({ error: 'json not found' });
+    if (request.query.longpoll) {
+      const patchUpdate = (patch, json) => {
+        clearTimeout(timeout);
+        if (request.query.patch) {
+          return reply.code(200).send(patch);
+        } else {
+          return reply.code(200).send(json);
+        }
+      }
+      const jsonUpdate = json => {
+        clearTimeout(timeout);
+        return reply.code(200).send(json);
+      };
+      const timeout = setTimeout(() => {
+        if (request.query.patch) {
+          emitter.off('patch.update', patchUpdate);
+        }
+        emitter.off('json.update', jsonUpdate);
+        return reply.code(204).send(undefined);
+      }, longpollTimeout || 15000);
+      if (request.query.patch) {
+        emitter.on('patch.update', patchUpdate);
+      }
+      emitter.on('json.update', jsonUpdate);
+      await reply;
+    } else {
+      const { jsondir, jsonid } = request;
+      const data = await db.getRecord(jsondir + "/" + jsonid);
+      return data && data.length > 0 ? reply.code(200).send(data[0].json) : reply.code(404).send({ error: 'json not found' });
+    }
   });
 
   fastify.put('/:jsondir/:jsonid', async (request, reply) => {
-    const { jsondir, jsonid } = request;
+    if (request.query.patch) {
+      const { jsondir, jsonid } = request;
 
-    try {
-      await db.updateRecord({
-        jsonpath: jsondir + "/" + jsonid,
-        ip: request.connection.remoteAddress,
-        json: JSON.stringify(request.body)
-      });
-    } catch (err) {
-      return reply.code(500).send({ error: 'error updating json' });
+      const res = (await db.getRecord(jsondir + "/" + jsonid))[0];
+      let obj;
+      if (res && res.json) {
+        obj = JSON.parse(res.json);
+        const errors = jsonpatch.validate(request.body, obj);
+        if (errors && errors.length > 0) {
+          return reply.code(400).send({ error: 'json patch is not valid' });
+        }
+      } else {
+        return reply.code(404).send({ error: 'json not found' });
+      }
+
+      let json;
+      try {
+        json = jsonpatch.applyPatch(obj, request.body).newDocument;
+      } catch (err) {
+        return reply.code(500).send({ error: 'error patching json' });
+      }
+      const body = JSON.stringify(json);
+      if (json.length > 1024 * 40) {
+        return reply.code(400).send({ error: 'json is too big' });
+      }
+
+      try {
+        await db.updateRecord({
+          jsonpath: jsondir + "/" + jsonid,
+          ip: request.connection.remoteAddress,
+          json: body
+        });
+      } catch (err) {
+        return reply.code(500).send({ error: 'error updating json' });
+      }
+
+      emitter.emit('patch.update', request.body, body);
+      return reply.code(201).send({ success: 'successfully updated' });
+    } else {
+      const { jsondir, jsonid } = request;
+
+      try {
+        await db.updateRecord({
+          jsonpath: jsondir + "/" + jsonid,
+          ip: request.connection.remoteAddress,
+          json: JSON.stringify(request.body)
+        });
+      } catch (err) {
+        return reply.code(500).send({ error: 'error updating json' });
+      }
+
+      emitter.emit('json.update', request.body);
+      return reply.code(201).send({ success: 'successfully updated' });
     }
-
-    emitter.emit('json.update', request.body);
-    return reply.code(201).send({ success: 'successfully updated' });
-  });
-
-  fastify.get('/lp/:jsondir/:jsonid', async (request, reply) => {
-    const timeout = setTimeout(() => {
-      return reply.code(204);
-    }, 15000);
-    emitter.on('patch.update', patch => {
-      clearTimeout(timeout);
-      return reply.code(200).send(patch);
-    });
-    emitter.on('json.update', json => {
-      clearTimeout(timeout);
-      return reply.code(200).send(json);
-    });
-    await reply;
-  });
-
-  fastify.put('/lp/:jsondir/:jsonid', async (request, reply) => {
-    const { jsondir, jsonid } = request;
-
-    const obj = await db.getRecord(jsondir + "/" + jsonid);
-    const errors = jsonpatch.validate(request.body, obj);
-    if (errors.length > 0) {
-      return reply.code(400).send({ error: 'json patch is not valid' });
-    }
-
-    let json;
-    try {
-      json = jsonpatch.applyPatch(obj, request.body).newDocument;
-    } catch (err) {
-      return reply.code(500).send({ error: 'error patching json' });
-    }
-    const body = JSON.stringify(json);
-    if (body.length > 1024 * 40) {
-      return reply.code(400).send({ error: 'json is too big' });
-    }
-
-    try {
-      await db.updateRecord({
-        jsonpath: jsondir + "/" + jsonid,
-        ip: request.connection.remoteAddress,
-        json: body
-      });
-    } catch (err) {
-      return reply.code(500).send({ error: 'error updating json' });
-    }
-
-    emitter.emit('patch.update', request.body);
-    return reply.code(201).send({ success: 'successfully updated' });
   });
 
   fastify.get('*', async (request, reply) => {
