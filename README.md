@@ -34,6 +34,18 @@ json-db-api --notpretty
 json-db-api.cmd --version
 ```
 
+## Usage
+
+```js
+// use longpoll
+fetch("localhost:8080/test/note?longpoll=1")
+// use json patch
+fetch("localhost:8080/test/note?patch=1")
+// use both
+fetch("localhost:8080/test/note?longpoll=1&patch=1")
+
+```
+
 ## Development
 
 ```bash

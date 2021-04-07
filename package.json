@@ -1,6 +1,6 @@
 {
   "name": "json-db-api",
-  "version": "1.3.2",
+  "version": "1.4.1",
   "description": "Simple JSON API server like jsonbase/myjson",
   "keywords": [
     "json",
@@ -34,5 +34,13 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Rundik/json-db-api.git"
+  },
+  "devDependencies": {
+    "tap": "^14.11.0"
+  },
+  "scripts": {
+    "test": "tap --watch",
+    "test-coverage": "tap --reporter=list --watch",
+    "test-migrate": "npx knex --knexfile knexfile_test.js migrate:up"
   }
 }

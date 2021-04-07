@@ -4,7 +4,10 @@ const jsonpatch = require('fast-json-patch');
 const EventEmitter2 = require('eventemitter2');
 const emitter = new EventEmitter2();
 
-module.exports = ({port, logger, knexfile, longpollTimeout}) => {
+module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
+  if (!knexfile) {
+    throw new Error("Knex file not defined");
+  }
   const fastify = Fastify({
     logger
   });
@@ -41,6 +44,7 @@ module.exports = ({port, logger, knexfile, longpollTimeout}) => {
     if (request.query.longpoll) {
       const patchUpdate = (patch, json) => {
         clearTimeout(timeout);
+        clearEvents();
         if (request.query.patch) {
           return reply.code(200).send(patch);
         } else {
@@ -49,19 +53,19 @@ module.exports = ({port, logger, knexfile, longpollTimeout}) => {
       }
       const jsonUpdate = json => {
         clearTimeout(timeout);
+        clearEvents();
         return reply.code(200).send(json);
       };
       const timeout = setTimeout(() => {
-        if (request.query.patch) {
-          emitter.off('patch.update', patchUpdate);
-        }
-        emitter.off('json.update', jsonUpdate);
+        clearEvents();
         return reply.code(204).send(undefined);
       }, longpollTimeout || 15000);
-      if (request.query.patch) {
-        emitter.on('patch.update', patchUpdate);
-      }
+      emitter.on('patch.update', patchUpdate);
       emitter.on('json.update', jsonUpdate);
+      const clearEvents = () => {
+        emitter.off('patch.update', patchUpdate);
+        emitter.off('json.update', jsonUpdate);
+      }
       await reply;
     } else {
       const { jsondir, jsonid } = request;
@@ -131,14 +135,5 @@ module.exports = ({port, logger, knexfile, longpollTimeout}) => {
     return { welcome: 'welcome to my json db api' };
   });
 
-
-  const start = async () => {
-    try {
-      await fastify.listen(port);
-    } catch (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-  }
-  start();
+  return fastify;
 }

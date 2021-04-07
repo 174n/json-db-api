@@ -2,7 +2,7 @@ const path = require('path');
 const minimist = require('minimist');
 const knex = require('knex');
 const updateNotice = require('update-notice');
-const pkg = require("./package.json");
+const pkg = require("../package.json");
 
 module.exports = {
   run: async argv => {
@@ -27,7 +27,7 @@ module.exports = {
 
     let knexfile;
     try {
-      knexfile =  require('./knexfile');
+      knexfile =  require('../knexfile');
       knexfile.connection.filename = args.database;
       if (!knexfile.migrations)
         knexfile.migrations = {};
@@ -61,8 +61,7 @@ module.exports = {
       process.exit(1);
     }
 
-    require('./server')({
-      port: args.port || 3000,
+    const app = require('./server')({
       logger: {
         prettyPrint: args.notpretty ? false : {
           translateTime: 'SYS:HH:MM:ss'
@@ -70,6 +69,13 @@ module.exports = {
       },
       knexfile
     });
+
+    try {
+      await app.listen(args.port || 3000);
+    } catch (err) {
+      app.log.error(err);
+      process.exit(1);
+    }
 
   }
 }
