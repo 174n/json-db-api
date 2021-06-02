@@ -1,6 +1,6 @@
 {
   "name": "json-db-api",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Simple JSON API server like jsonbase/myjson",
   "keywords": [
     "json",

@@ -38,11 +38,14 @@ module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
     }
 
     done();
-  })
+  });
 
   fastify.get('/:jsondir/:jsonid', async (request, reply) => {
+    const { jsondir, jsonid } = request;
     if (request.query.longpoll) {
-      const patchUpdate = (patch, json) => {
+      const patchUpdate = (patch, json, path) => {
+        if (path !== jsondir+jsonid)
+          return;
         clearTimeout(timeout);
         clearEvents();
         if (request.query.patch) {
@@ -51,7 +54,9 @@ module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
           return reply.code(200).send(json);
         }
       }
-      const jsonUpdate = json => {
+      const jsonUpdate = (json, path) => {
+        if (path !== jsondir + jsonid)
+          return;
         clearTimeout(timeout);
         clearEvents();
         return reply.code(200).send(json);
@@ -68,7 +73,6 @@ module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
       }
       await reply;
     } else {
-      const { jsondir, jsonid } = request;
       const data = await db.getRecord(jsondir + "/" + jsonid);
       return data && data.length > 0 ? reply.code(200).send(data[0].json) : reply.code(404).send({ error: 'json not found' });
     }
@@ -111,7 +115,7 @@ module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
         return reply.code(500).send({ error: 'error updating json' });
       }
 
-      emitter.emit('patch.update', request.body, body);
+      emitter.emit('patch.update', request.body, body, jsondir+jsonid);
       return reply.code(201).send({ success: 'successfully updated' });
     } else {
       const { jsondir, jsonid } = request;
@@ -126,7 +130,7 @@ module.exports = ({logger, knexfile, longpollTimeout} = {}) => {
         return reply.code(500).send({ error: 'error updating json' });
       }
 
-      emitter.emit('json.update', request.body);
+      emitter.emit('json.update', request.body, jsondir+jsonid);
       return reply.code(201).send({ success: 'successfully updated' });
     }
   });
